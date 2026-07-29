@@ -1501,6 +1501,10 @@ export async function mockApi(page: import("@playwright/test").Page) {
 // A `test` whose page has the API mocked before navigation.
 export const test = base.extend({
   page: async ({ page }, use) => {
+    // App defaults to zh-CN; hermetic specs assert English copy, so pin locale before any script runs.
+    await page.addInitScript(() => {
+      localStorage.setItem("openworker.locale", "en");
+    });
     await mockApi(page);
     await use(page);
   },

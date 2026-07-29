@@ -7,6 +7,7 @@ import {
   isTauri,
   type UpdateInfo,
 } from "../tauri";
+import { t } from "../i18n";
 
 // Auto-update prompt (desktop shell only — the browser build never renders this).
 // Deliberately a PROMPT, not a silent background install: swapping the app under a
@@ -88,13 +89,13 @@ export function UpdateBanner() {
       role="status"
       data-testid="update-banner"
     >
-      <div className="text-[13px] font-semibold">Update available</div>
+      <div className="text-[13px] font-semibold">{t("Update available")}</div>
       <div className="text-[12px] text-muted mt-0.5">
-        OpenWorker v{update.version} is ready to install.
+        {t("OpenWorker v{version} is ready to install.", { version: update.version })}
       </div>
       {phase === "error" && (
         <div className="text-[11.5px] text-warnInk mt-1.5">
-          The update couldn't be installed — it will be offered again next launch.
+          {t("The update couldn't be installed — it will be offered again next launch.")}
         </div>
       )}
       <div className="flex items-center gap-2 mt-2.5">
@@ -104,7 +105,7 @@ export function UpdateBanner() {
           disabled={busy}
           data-testid="update-install"
         >
-          {busy ? "Downloading…" : "Restart to update"}
+          {busy ? t("Downloading…") : t("Restart to update")}
         </button>
         <button
           className="px-2 py-1.5 text-[12.5px] text-faint hover:text-muted"
@@ -119,7 +120,7 @@ export function UpdateBanner() {
           disabled={phase === "installing"}
           data-testid="update-later"
         >
-          Later
+          {t("Later")}
         </button>
       </div>
     </div>

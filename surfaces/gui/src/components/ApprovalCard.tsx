@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ApprovalDecision, Item } from "../types";
 import { humanizeApprovalTitle, type HumanLine } from "../humanize";
+import { t } from "../i18n";
 import { Icon } from "./Icon";
 
 export function shortArgs(args: any): string {
@@ -65,14 +66,21 @@ export function scopeNote(
   args: any,
   category?: string,
 ): { text: string; external: boolean } {
-  if (category === "connector") return { text: "acts on a connected service", external: true };
+  if (category === "connector") return { text: t("acts on a connected service"), external: true };
   if (EXTERNAL.has(name)) {
     const platform = String(args?.target ?? "").split(":")[0];
     const names: Record<string, string> = { slack: "Slack", telegram: "Telegram" };
-    return { text: `leaves this Mac → ${names[platform] || platform || "a connected chat"}`, external: true };
+    const label = names[platform] || platform;
+    if (label) {
+      return { text: t("leaves this Mac → {platform}", { platform: label }), external: true };
+    }
+    return { text: t("leaves this Mac → a connected chat"), external: true };
   }
   const overwrite = name === "write_file" && args?.overwrite;
-  return { text: "stays on this Mac" + (overwrite ? " · overwrites the existing file" : ""), external: false };
+  return {
+    text: overwrite ? t("stays on this Mac · overwrites the existing file") : t("stays on this Mac"),
+    external: false,
+  };
 }
 
 // The proposed content/command, straight from the tool call's ARGS — the file/action
@@ -97,10 +105,10 @@ export function PreviewBlock({ text, mono = true }: { text: string; mono?: boole
       {clipped && (
         <button className="approval-prev-more" onClick={() => setAll((v) => !v)}>
           {all
-            ? "show less"
+            ? t("show less")
             : lines.length > PREVIEW_LINES
-              ? `show all ${lines.length} lines`
-              : "show the full message"}
+              ? t("show all {n} lines", { n: lines.length })
+              : t("show the full message")}
         </button>
       )}
     </div>
@@ -136,7 +144,7 @@ function Buttons({
   return (
     <div className="approval-btns">
       <button className="btn approval-primary" onClick={() => onApprove("once")}>
-        {primaryLabel}
+        {t(primaryLabel)}
       </button>
       {offerStanding && (
         <button
@@ -144,7 +152,7 @@ function Buttons({
           title={`Always allow ${item.name} → ${item.standingTarget} for “${runTask?.title || "this automation"}” — revoke any time on its Automations page`}
           onClick={() => onApprove("always_task")}
         >
-          Allow every time
+          {t("Allow every time")}
         </button>
       )}
       {/* In a run context the task-persistent grant replaces the session-scoped one —
@@ -158,17 +166,17 @@ function Buttons({
           title={`Always allow ${TOOL_VERBS[item.name]?.toLowerCase() || item.name} for this session`}
           onClick={() => onApprove("always_tool")}
         >
-          Always allow
+          {t("Always allow")}
         </button>
       )}
       {item.name === "run_shell" && (
         <button className="btn" onClick={() => onApprove("always_command")}>
-          Always allow this command
+          {t("Always allow this command")}
         </button>
       )}
       <span className="spacer" />
       <button className="btn quiet-deny" onClick={() => onApprove("deny")}>
-        Deny
+        {t("Deny")}
       </button>
     </div>
   );
@@ -261,7 +269,7 @@ export function ApprovalCard({
                 {g.access === "write" ? "✓" : "·"}
               </span>
               <span className="grant-line">
-                {TOOL_VERBS[g.tool] || g.tool} <code className="approval-tool">{g.target}</code>
+                {t(TOOL_VERBS[g.tool] || g.tool)} <code className="approval-tool">{g.target}</code>
                 <span className="grant-note">
                   {g.access === "write" ? " — always allowed once you approve" : " — read-only"}
                 </span>

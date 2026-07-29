@@ -33,6 +33,7 @@ import {
   type DictationStatus,
 } from "../tauri";
 import { useThemePref } from "../theme";
+import { t, getLocale, setLocale, type Locale } from "../i18n";
 import { Icon } from "./Icon";
 import { PanelHead } from "./IntegrationsView";
 import { ModelsTab } from "./ManageTabs";
@@ -58,11 +59,11 @@ const BTN_ACCENT = "text-[12.5px] px-3 py-2 rounded-lg bg-accent text-white shri
 const BTN_BORDERED =
   "text-[12.5px] px-3 py-2 rounded-lg border border-line bg-paper hover:border-lineStrong shrink-0";
 
-const SET_TABS: { key: SetTab; label: string; icon: "sliders" | "code" | "mic" | "sparkle" }[] = [
-  { key: "appearance", label: "General", icon: "sliders" },
-  { key: "models", label: "Models", icon: "code" },
-  { key: "voice", label: "Voice input", icon: "mic" },
-  { key: "personas", label: "Personas", icon: "sparkle" },
+const SET_TABS: { key: SetTab; labelKey: string; icon: "sliders" | "code" | "mic" | "sparkle" }[] = [
+  { key: "appearance", labelKey: "General", icon: "sliders" },
+  { key: "models", labelKey: "Models", icon: "code" },
+  { key: "voice", labelKey: "Voice input", icon: "mic" },
+  { key: "personas", labelKey: "Personas", icon: "sparkle" },
 ];
 
 export function SettingsView({
@@ -84,20 +85,20 @@ export function SettingsView({
     <main className="flex-1 min-w-0 flex bg-paper">
       <nav className="page-subnav w-[208px] shrink-0 border-r border-line bg-panel/40 px-3 py-4">
         <div className="px-2 text-[13.5px] font-semibold mb-3 flex items-center gap-2">
-          <Icon name="gear" size={16} /> Settings
+          <Icon name="gear" size={16} /> {t("Settings")}
         </div>
-        {tabs.map((t) => {
-          const active = tab === t.key;
+        {tabs.map((tabDef) => {
+          const active = tab === tabDef.key;
           return (
             <button
-              key={t.key}
+              key={tabDef.key}
               className={
                 "w-full text-left px-2.5 py-2 rounded-lg text-[13px] flex items-center gap-2 " +
                 (active ? "bg-paper text-accent font-medium" : "text-muted hover:bg-paper hover:text-ink")
               }
-              onClick={() => setTab(t.key)}
+              onClick={() => setTab(tabDef.key)}
             >
-              <Icon name={t.icon} size={15} /> {t.label}
+              <Icon name={tabDef.icon} size={15} /> {t(tabDef.labelKey)}
             </button>
           );
         })}
@@ -110,8 +111,10 @@ export function SettingsView({
           ) : tab === "models" ? (
             <section>
               <PanelHead
-                title="Models"
-                sub="Providers and the models offered in the composer's picker. Keys are stored only on this computer."
+                title={t("Models")}
+                sub={t(
+                  "Providers and the models offered in the composer's picker. Keys are stored only on this computer.",
+                )}
               />
               <ModelsTab />
               {/* Token savings is model-spend behavior, so it lives here (UX-021),
@@ -258,8 +261,8 @@ function VoiceInputSection() {
   return (
     <section>
       <PanelHead
-        title="Voice input"
-        sub="Speak naturally in the composer. Recordings and transcripts stay on this device."
+        title={t("Voice input")}
+        sub={t("Speak naturally in the composer. Recordings and transcripts stay on this device.")}
       />
 
       {!desktop ? (
@@ -358,8 +361,8 @@ function PersonasSection({ onOpenPersona }: { onOpenPersona?: (id: string) => vo
   return (
     <section>
       <PanelHead
-        title="Personas"
-        sub="Which coworkers are enabled and shown in the picker, plus installing new persona bundles."
+        title={t("Personas")}
+        sub={t("Which coworkers are enabled and shown in the picker, plus installing new persona bundles.")}
       />
       <PersonasTab key={galleryBump} onOpenPersona={onOpenPersona} />
       <button
@@ -387,6 +390,31 @@ function PersonasSection({ onOpenPersona }: { onOpenPersona?: (id: string) => vo
 }
 
 // -- Appearance + app behaviour ------------------------------------------------
+function LanguageCard() {
+  const locale = getLocale();
+  const pick = (next: Locale) => {
+    if (next !== locale) setLocale(next);
+  };
+  return (
+    <div className={CARD + " p-4 mb-4"} data-testid="settings-language">
+      <div className={FIELD_LABEL}>{t("Language")}</div>
+      <div className={FIELD_HELP}>{t("Interface language")}</div>
+      <div className="seg mt-2.5" role="radiogroup" aria-label={t("Language")}>
+        <button
+          type="button"
+          className={locale === "zh-CN" ? "active" : ""}
+          onClick={() => pick("zh-CN")}
+        >
+          {t("Chinese")}
+        </button>
+        <button type="button" className={locale === "en" ? "active" : ""} onClick={() => pick("en")}>
+          {t("English")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AppearanceSection() {
   const [theme, setTheme] = useThemePref();
   const [autostart, setAuto] = useState(false);
@@ -409,18 +437,20 @@ function AppearanceSection() {
 
   return (
     <section>
-      <PanelHead title="General" sub="How OpenWorker looks and behaves on this machine." />
+      <PanelHead title={t("General")} sub={t("How OpenWorker looks and behaves on this machine.")} />
+
+      <LanguageCard />
 
       <div className={CARD + " p-4 mb-4"}>
-        <div className={FIELD_LABEL}>Theme</div>
-        <div className="seg mt-2.5" role="radiogroup" aria-label="Appearance">
+        <div className={FIELD_LABEL}>{t("Theme")}</div>
+        <div className="seg mt-2.5" role="radiogroup" aria-label={t("Appearance")}>
           {(["light", "dark", "auto"] as const).map((p) => (
             <button key={p} className={p === theme ? "active" : ""} onClick={() => setTheme(p)}>
-              {p === "light" ? "Light" : p === "dark" ? "Dark" : "Auto"}
+              {p === "light" ? t("Light") : p === "dark" ? t("Dark") : t("Auto")}
             </button>
           ))}
         </div>
-        <div className={FIELD_HELP}>Auto follows your Mac&rsquo;s appearance.</div>
+        <div className={FIELD_HELP}>{t("Auto follows your Mac's appearance.")}</div>
       </div>
 
       <SidebarCard />
@@ -431,19 +461,23 @@ function AppearanceSection() {
 
       {desktop && (
         <div className={CARD + " p-4"}>
-          <div className={FIELD_LABEL + " mb-2.5"}>Always-on</div>
+          <div className={FIELD_LABEL + " mb-2.5"}>{t("Always-on")}</div>
           <label className="flex items-start gap-3 py-2">
             <input type="checkbox" className="mt-0.5" checked={autostart} onChange={(e) => toggleAuto(e.target.checked)} />
             <span>
-              <span className="block text-[13px] text-ink">Open at login</span>
-              <span className="block text-[12px] text-muted">Launch OpenWorker automatically when you sign in.</span>
+              <span className="block text-[13px] text-ink">{t("Open at login")}</span>
+              <span className="block text-[12px] text-muted">
+                {t("Launch OpenWorker automatically when you sign in.")}
+              </span>
             </span>
           </label>
           <label className="flex items-start gap-3 py-2">
             <input type="checkbox" className="mt-0.5" checked={keepAwake} onChange={(e) => toggleKeep(e.target.checked)} />
             <span>
-              <span className="block text-[13px] text-ink">Keep this system awake</span>
-              <span className="block text-[12px] text-muted">Prevent idle sleep so scheduled tasks fire on time.</span>
+              <span className="block text-[13px] text-ink">{t("Keep this system awake")}</span>
+              <span className="block text-[12px] text-muted">
+                {t("Prevent idle sleep so scheduled tasks fire on time.")}
+              </span>
             </span>
           </label>
         </div>
@@ -453,14 +487,16 @@ function AppearanceSection() {
           every build, the browser dev shell runs the same first-run flow) and, on
           desktop, the manual update check (launch also checks automatically). */}
       <div className={CARD + " p-4 mt-4"}>
-        <div className={FIELD_LABEL + " mb-2"}>Setup &amp; updates</div>
+        <div className={FIELD_LABEL + " mb-2"}>{t("Setup & updates")}</div>
         <div className="flex items-center gap-2">
           <button className={BTN_BORDERED} onClick={runSetupAgain}>
-            Run setup again
+            {t("Run setup again")}
           </button>
           {desktop && <UpdateInline />}
         </div>
-        <div className={FIELD_HELP}>Replays the first-run setup: model, first automation, tips.</div>
+        <div className={FIELD_HELP}>
+          {t("Replays the first-run setup: model, first automation, tips.")}
+        </div>
       </div>
     </section>
   );
@@ -690,9 +726,9 @@ function SidebarCard() {
   if (peek === null) return null;
   return (
     <div className={CARD + " p-4 mb-4"}>
-      <div className={FIELD_LABEL}>Sidebar</div>
+      <div className={FIELD_LABEL}>{t("Sidebar")}</div>
       <label className="flex items-center gap-3 mt-2.5">
-        <span className="text-[13px] text-ink">Conversations shown per coworker</span>
+        <span className="text-[13px] text-ink">{t("Conversations shown per coworker")}</span>
         <input
           type="number"
           min={1}
@@ -703,7 +739,7 @@ function SidebarCard() {
         />
       </label>
       <div className={FIELD_HELP}>
-        Longer lists collapse behind &ldquo;Show more&rdquo;. Applies per coworker and per project.
+        {t('Longer lists collapse behind "Show more". Applies per coworker and per project.')}
       </div>
     </div>
   );
@@ -747,7 +783,7 @@ function FilesCard() {
 
   return (
     <div className={CARD + " p-4 mb-4"}>
-      <div className={FIELD_LABEL}>Files</div>
+      <div className={FIELD_LABEL}>{t("Files")}</div>
         <div className="flex items-center gap-2 mt-2.5">
           <input
             className={INPUT}
@@ -760,17 +796,18 @@ function FilesCard() {
             onKeyDown={(e) => e.key === "Enter" && saveScratch()}
           />
           {desktop && (
-            <button className={BTN_BORDERED} onClick={browseScratch} title="Pick a folder">
-              Browse
+            <button className={BTN_BORDERED} onClick={browseScratch} title={t("Pick a folder")}>
+              {t("Browse")}
             </button>
           )}
           <button className={BTN_ACCENT} onClick={saveScratch} disabled={!scratchDraft.trim()}>
-            Save
+            {t("Save")}
           </button>
         </div>
       <div className={FIELD_HELP}>
-        Each conversation gets its own folder under this location. Existing conversations keep their current
-        folder; you can grant access to more folders inside any conversation.
+        {t(
+          "Each conversation gets its own folder under this location. Existing conversations keep their current folder; you can grant access to more folders inside any conversation.",
+        )}
       </div>
       {scratchMsg && <div className="text-[12.5px] text-muted mt-2.5">{scratchMsg}</div>}
     </div>

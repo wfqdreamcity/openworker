@@ -30,6 +30,7 @@ import {
 import { CloudSignInInline, CloudStatusPending } from "./connectors/CloudSignIn";
 import { ModelChecklist } from "./ModelChecklist";
 import { ProviderCards, ProviderForm, useProviderSetup } from "../providers/ProviderSetup";
+import { t } from "../i18n";
 import { Toggle } from "./Toggle";
 
 // "2h ago"-style label for the providers' Last-used line (null when never used).
@@ -83,7 +84,7 @@ export function ModelsTab() {
     refreshSettings();
   }, []);
 
-  if (!settings) return <div className="text-[13px] text-muted">Loading…</div>;
+  if (!settings) return <div className="text-[13px] text-muted">{t("Loading…")}</div>;
 
   const info = ps.info;
   const knownNames = ps.providers.map((p) => p.name);
@@ -108,10 +109,11 @@ export function ModelsTab() {
               className="text-[12.5px] text-danger/80 hover:text-danger hover:underline underline-offset-2"
               data-testid="set-remove-key"
               onClick={() => {
-                if (window.confirm(`Remove the ${info?.title} key from this computer?`)) ps.removeKey();
+                if (window.confirm(t("Remove the {title} key from this computer?", { title: info?.title ?? "" })))
+                  ps.removeKey();
               }}
             >
-              Remove key…
+              {t("Remove key…")}
             </button>
           ) : null
         }
@@ -119,17 +121,21 @@ export function ModelsTab() {
 
       {ps.sel === "openai" && settings.source === "env" && (
         <p className="text-[12px] text-muted mt-3 leading-relaxed">
-          A key is set via <code>OPENAI_API_KEY</code> in this server's environment. You can override
-          it above; the stored key is used only when the environment variable is absent.
+          {t("A key is set via")}{" "}
+          <code>OPENAI_API_KEY</code>{" "}
+          {t(
+            "in this server's environment. You can override it above; the stored key is used only when the environment variable is absent.",
+          )}
         </p>
       )}
 
       {info?.configured ? (
         <div className="mt-6">
-          <div className={SEC_H + " mb-1.5"}>Models</div>
+          <div className={SEC_H + " mb-1.5"}>{t("Models")}</div>
           <p className="text-[12px] text-muted mb-2.5 leading-relaxed">
-            Ticked models show in the composer's picker; the black badge marks the default for new
-            sessions.
+            {t(
+              "Ticked models show in the composer's picker; the black badge marks the default for new sessions.",
+            )}
           </p>
           <ModelChecklist
             provider={ps.sel}
@@ -146,9 +152,11 @@ export function ModelsTab() {
         // key unlocks is part of deciding to get one at all (owner ask, 2026-07-04).
         (info?.suggested_models?.length || 0) > 0 && (
           <div className="mt-6" data-testid="model-preview">
-            <div className={SEC_H + " mb-1.5"}>Included models</div>
+            <div className={SEC_H + " mb-1.5"}>{t("Included models")}</div>
             <p className="text-[12px] text-muted mb-2.5 leading-relaxed">
-              Curated, agent-capable models this provider serves — add your key above to enable them.
+              {t(
+                "Curated, agent-capable models this provider serves — add your key above to enable them.",
+              )}
             </p>
             <div className="space-y-1">
               {(info?.suggested_models || []).map((m) => {
@@ -194,10 +202,11 @@ function ComposerPickerCard({
   };
   return (
     <div className="mt-6" data-testid="composer-picker">
-      <div className={SEC_H + " mb-1.5"}>In the composer's picker</div>
+      <div className={SEC_H + " mb-1.5"}>{t("In the composer's picker")}</div>
       <p className="text-[12px] text-muted mb-2.5 leading-relaxed">
-        The models offered when starting a session; the black badge marks the default. Add more
-        from a provider's card above.
+        {t(
+          "The models offered when starting a session; the black badge marks the default. Add more from a provider's card above.",
+        )}
       </p>
       <div className="mlist">
         {settings.models.map((id) => {
@@ -209,7 +218,13 @@ function ComposerPickerCard({
                   type="checkbox"
                   checked
                   disabled={isDefault}
-                  title={isDefault ? "The default model is always shown — make another model default first" : "Remove from the picker"}
+                  title={
+                    isDefault
+                      ? t(
+                          "The default model is always shown — make another model default first",
+                        )
+                      : t("Remove from the picker")
+                  }
                   onChange={() => removeModel(id).then((r) => r.ok && onChanged())}
                 />
                 <span className="mlist-name" title={id}>
@@ -218,10 +233,10 @@ function ComposerPickerCard({
               </label>
               <span className="text-[11px] text-faint mr-2 shrink-0">{tag(id)}</span>
               {isDefault ? (
-                <span className="mlist-default">default</span>
+                <span className="mlist-default">{t("default")}</span>
               ) : (
                 <button className="mlist-make" onClick={() => setDefaultModel(id).then(() => onChanged())}>
-                  Make default
+                  {t("Make default")}
                 </button>
               )}
             </div>
