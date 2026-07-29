@@ -191,3 +191,5 @@ jobs:
           draft: true
           files: dist/*
           generate_release_notes: true
+
+# Force workflow registration on fork (no behavior change).
